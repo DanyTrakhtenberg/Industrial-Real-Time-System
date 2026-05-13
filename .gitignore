@@ -1,0 +1,16 @@
+# Build outputs
+[Bb]in/
+[Oo]bj/
+*.user
+*.suo
+.vs/
+
+# Node
+node_modules/
+npm-debug.log*
+dist/
+*.tsbuildinfo
+
+# OS
+Thumbs.db
+.DS_Store

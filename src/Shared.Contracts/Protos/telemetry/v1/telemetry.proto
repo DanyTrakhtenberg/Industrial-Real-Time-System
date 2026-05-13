@@ -1,0 +1,38 @@
+syntax = "proto3";
+
+package industrial.telemetry.v1;
+
+option csharp_namespace = "Industrial.Telemetry.V1";
+
+import "google/protobuf/timestamp.proto";
+import "common/v1/types.proto";
+
+// Live and snapshot telemetry. Redis is the write-side source of truth in the Telemetry app;
+// these messages describe data crossing the gRPC boundary.
+
+message TelemetryReading {
+  int32 sensor_id = 1;
+  double value = 2;
+  string unit = 3;
+  google.protobuf.Timestamp captured_at = 4;
+}
+
+message TelemetryBatch {
+  industrial.common.v1.CorrelationContext correlation = 1;
+  google.protobuf.Timestamp emitted_at = 2;
+  repeated TelemetryReading readings = 3;
+}
+
+message GetSnapshotRequest {
+  industrial.common.v1.CorrelationContext correlation = 1;
+}
+
+message SubscribeTelemetryRequest {
+  industrial.common.v1.CorrelationContext correlation = 1;
+}
+
+// Named to avoid colliding with the host project assembly name in C# usings.
+service LiveTelemetry {
+  rpc GetSnapshot(GetSnapshotRequest) returns (TelemetryBatch);
+  rpc SubscribeTelemetry(SubscribeTelemetryRequest) returns (stream TelemetryBatch);
+}
