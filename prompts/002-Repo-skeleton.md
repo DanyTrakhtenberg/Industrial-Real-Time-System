@@ -1,7 +1,6 @@
 Create the monorepo skeleton for this assignment.
 
 Projects:
-
 - src/RestApiService
 - src/SqlDataService
 - src/TelemetryService
