@@ -25,7 +25,8 @@ public sealed class SensorLatestRedisReader(
             if (val.IsNullOrEmpty)
                 return null;
 
-            return JsonSerializer.Deserialize<SensorLatestDto>(val!, Json);
+            var json = val.ToString();
+            return JsonSerializer.Deserialize<SensorLatestDto>(json, Json);
         }
         catch (OperationCanceledException)
         {
