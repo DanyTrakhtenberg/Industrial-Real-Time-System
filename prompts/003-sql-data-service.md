@@ -1,0 +1,16 @@
+Implement SqlDataService.
+
+Requirements:
+
+- C# .NET 8
+- EF Core
+- PostgreSQL or SQL Server
+- gRPC service
+- Sensor table
+- TelemetryReading table
+- Seed exactly 20 sensors
+- gRPC methods:
+  - GetSensors
+  - GetSensorById
+  - SaveTelemetry
+  - GetTelemetryHistory

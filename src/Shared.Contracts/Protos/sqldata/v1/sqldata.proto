@@ -1,0 +1,75 @@
+syntax = "proto3";
+
+package industrial.sqldata.v1;
+
+option csharp_namespace = "Industrial.Sqldata.V1";
+
+import "google/protobuf/timestamp.proto";
+
+// gRPC API for the SQL Data service (EF Core persistence).
+// Service name avoids clashing with the host assembly namespace `SqlDataService`.
+
+message Sensor {
+  int32 id = 1;
+  string display_name = 2;
+  string unit = 3;
+  bool enabled = 4;
+}
+
+message GetSensorsRequest {}
+
+message GetSensorsResponse {
+  repeated Sensor sensors = 1;
+}
+
+message GetSensorByIdRequest {
+  int32 sensor_id = 1;
+}
+
+message GetSensorByIdResponse {
+  Sensor sensor = 1;
+  bool found = 2;
+}
+
+message SaveTelemetryRequest {
+  int32 sensor_id = 1;
+  double value = 2;
+  string unit = 3;
+  google.protobuf.Timestamp captured_at = 4;
+}
+
+message SaveTelemetryResponse {
+  int64 telemetry_reading_id = 1;
+}
+
+message GetTelemetryHistoryRequest {
+  // 0 = include all sensors; otherwise filter by sensor id.
+  int32 sensor_id = 1;
+  // If from_utc is the default (unix epoch), service uses UtcNow - 7 days.
+  google.protobuf.Timestamp from_utc = 2;
+  // If to_utc is the default (unix epoch), service uses UtcNow.
+  google.protobuf.Timestamp to_utc = 3;
+  int32 page_size = 4;
+  // Opaque cursor: last `TelemetryHistoryItem.id` from previous page (exclusive).
+  string page_token = 5;
+}
+
+message TelemetryHistoryItem {
+  int64 id = 1;
+  int32 sensor_id = 2;
+  double value = 3;
+  string unit = 4;
+  google.protobuf.Timestamp captured_at = 5;
+}
+
+message GetTelemetryHistoryResponse {
+  repeated TelemetryHistoryItem items = 1;
+  string next_page_token = 2;
+}
+
+service SensorTelemetry {
+  rpc GetSensors(GetSensorsRequest) returns (GetSensorsResponse);
+  rpc GetSensorById(GetSensorByIdRequest) returns (GetSensorByIdResponse);
+  rpc SaveTelemetry(SaveTelemetryRequest) returns (SaveTelemetryResponse);
+  rpc GetTelemetryHistory(GetTelemetryHistoryRequest) returns (GetTelemetryHistoryResponse);
+}

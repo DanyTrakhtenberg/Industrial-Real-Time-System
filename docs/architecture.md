@@ -174,10 +174,10 @@ SignalR method names and REST JSON shapes should stay aligned with the protobuf 
 
 | Path | Purpose |
 |------|---------|
-| `src/Shared.Contracts/Protos/` | gRPC API skeleton (protobuf). |
+| `src/Shared.Contracts/Protos/sqldata/v1/sqldata.proto` | SQL persistence gRPC (`SensorTelemetry`: GetSensors, GetSensorById, SaveTelemetry, GetTelemetryHistory). |
 | `contracts/rabbitmq/` | AMQP routing and payload documentation. |
 | `src/ui/` | Frontend (to be scaffolded). |
-| `src/services/` | Backend services (to be scaffolded). |
+| `src/RestApiService/`, `src/SqlDataService/`, `src/TelemetryService/` | Backend hosts. |
 | `tests/` | Integration tests (to be added). |
 | `prompts/` | Mandatory AI prompt documentation. |
 
