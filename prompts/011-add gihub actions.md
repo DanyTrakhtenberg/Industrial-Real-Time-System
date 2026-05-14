@@ -1,0 +1,1 @@
+Add a minimal GitHub Action (e.g. dotnet restore, dotnet test Industrial.sln, optionally npm ci + npm run build in src/ui).
