@@ -1,0 +1,104 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: industrial
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d industrial"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  sql-data-service:
+    build:
+      context: .
+      dockerfile: src/SqlDataService/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__SqlData: >-
+        Host=postgres;Port=5432;Database=industrial;Username=postgres;Password=postgres
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "5108:8080"
+
+  telemetry-service:
+    build:
+      context: .
+      dockerfile: src/TelemetryService/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__Redis: redis:6379,abortConnect=false,connectTimeout=5000
+      RabbitMQ__HostName: rabbitmq
+    depends_on:
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+    ports:
+      - "5109:8080"
+
+  rest-api:
+    build:
+      context: .
+      dockerfile: src/RestApiService/Dockerfile
+    environment:
+      ASPNETCORE_URLS: http://+:8080
+      SqlDataGrpc__Address: http://sql-data-service:8080
+      ConnectionStrings__Redis: redis:6379,abortConnect=false,connectTimeout=5000
+      RabbitMQ__HostName: rabbitmq
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      sql-data-service:
+        condition: service_started
+    ports:
+      - "5051:8080"
+
+  ui:
+    build:
+      context: .
+      dockerfile: src/ui/Dockerfile
+      args:
+        # Browser on the host reaches the API via published port (must match rest-api ports).
+        VITE_API_BASE_URL: http://localhost:5051
+    depends_on:
+      rest-api:
+        condition: service_started
+    ports:
+      - "3000:80"
+
+volumes:
+  pgdata:
