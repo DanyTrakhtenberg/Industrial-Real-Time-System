@@ -45,6 +45,9 @@ Backend services **must not** use REST or SignalR to talk to each other. The UI 
                            RabbitMQ─┘ (events after Redis)
 ```
 
+
+
+
 **Telemetry path (conceptual):** IoT Telemetry Service updates **Redis** every tick, then publishes **telemetry events** to **RabbitMQ** (and/or exposes **gRPC server-streaming** sourced from the same in-process pipeline). The REST API consumes those backend channels and **pushes** to the UI via **SignalR**. No HTTP polling on the UI for live values.
 
 **Configuration / durable data:** The UI calls **REST**; the REST API calls the **SQL Data Service** via **gRPC**. Optional **RabbitMQ** events (e.g. configuration changed) allow the Telemetry service to adjust behavior without REST between backends.

@@ -130,6 +130,10 @@ docker compose down -v
 
 ## Tests
 
+### CI (GitHub Actions)
+
+On push or pull request to `main` / `master`, [`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs **`dotnet restore`** and **`dotnet test Industrial.sln`** (including Testcontainers integration tests; the hosted runner provides Docker), then **`npm ci`** and **`npm run build`** in `src/ui`. You can also run the workflow manually from the **Actions** tab (`workflow_dispatch`).
+
 ### All tests (solution)
 
 ```bash
