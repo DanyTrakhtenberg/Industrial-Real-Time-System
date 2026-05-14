@@ -161,6 +161,38 @@ public sealed class SensorTelemetryGrpcServiceTests
     }
 
     [Fact]
+    public async Task SaveTelemetry_then_GetTelemetryHistory_with_omitted_bounds_returns_row()
+    {
+        await using var db = TestDbContextFactory.Create();
+        await TestDataSeed.SeedTwentySensorsAsync(db);
+        var sut = new SensorTelemetryGrpcService(db);
+        var ctx = TestGrpcCallContext.Create();
+
+        await sut.SaveTelemetry(
+            new SaveTelemetryRequest
+            {
+                SensorId = 3,
+                Value = 9.99,
+                Unit = "psi",
+                CapturedAt = Timestamp.FromDateTime(UtcAnchor),
+            },
+            ctx);
+
+        var history = await sut.GetTelemetryHistory(
+            new GetTelemetryHistoryRequest
+            {
+                SensorId = 3,
+                PageSize = 20,
+            },
+            ctx);
+
+        var row = Assert.Single(history.Items);
+        Assert.Equal(3, row.SensorId);
+        Assert.Equal(9.99, row.Value);
+        Assert.Equal("psi", row.Unit);
+    }
+
+    [Fact]
     public async Task GetTelemetryHistory_pagination_with_page_token()
     {
         await using var db = TestDbContextFactory.Create();

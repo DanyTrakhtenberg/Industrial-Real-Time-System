@@ -33,8 +33,50 @@ public sealed class FakeMqPublisher : IRabbitMqTelemetryPublisher
     }
 }
 
+/// <summary>Records operation order to assert Redis write happens before Rabbit publish per sensor.</summary>
+public sealed class RecordingRedisWriter(List<string> ops) : IRedisLatestTelemetryWriter
+{
+    public Task<bool> TryWriteLatestJsonAsync(int sensorId, string json, CancellationToken cancellationToken = default)
+    {
+        ops.Add($"redis:{sensorId}");
+        return Task.FromResult(true);
+    }
+}
+
+public sealed class RecordingMqPublisher(List<string> ops) : IRabbitMqTelemetryPublisher
+{
+    public Task PublishTelemetryUpdatedAsync(string jsonBody, CancellationToken cancellationToken = default)
+    {
+        using var doc = JsonDocument.Parse(jsonBody);
+        var sid = doc.RootElement.GetProperty("readings")[0].GetProperty("sensorId").GetInt32();
+        ops.Add($"mq:{sid}");
+        return Task.CompletedTask;
+    }
+}
+
 public sealed class TelemetryCycleExecutorTests
 {
+    [Fact]
+    public async Task RunOnceAsync_writes_redis_before_publishing_mq_for_each_sensor_in_order()
+    {
+        var ops = new List<string>();
+        var redis = new RecordingRedisWriter(ops);
+        var mq = new RecordingMqPublisher(ops);
+        var gen = new SinusoidalSensorValueGenerator();
+        var executor = new TelemetryCycleExecutor(redis, mq, gen, NullLogger<TelemetryCycleExecutor>.Instance);
+        var tick = new DateTimeOffset(2026, 5, 14, 12, 0, 0, TimeSpan.Zero);
+
+        await executor.RunOnceAsync(tick, CancellationToken.None);
+
+        Assert.Equal(40, ops.Count);
+        for (var i = 1; i <= 20; i++)
+        {
+            var rIdx = (i - 1) * 2;
+            Assert.Equal($"redis:{i}", ops[rIdx]);
+            Assert.Equal($"mq:{i}", ops[rIdx + 1]);
+        }
+    }
+
     [Fact]
     public async Task RunOnceAsync_writes_twenty_redis_keys_and_publishes_twenty_messages_when_redis_always_succeeds()
     {
