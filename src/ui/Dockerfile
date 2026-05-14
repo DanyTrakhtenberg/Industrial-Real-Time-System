@@ -3,7 +3,8 @@ WORKDIR /app
 COPY src/ui/package.json src/ui/package-lock.json ./
 RUN npm ci
 COPY src/ui/ ./
-ARG VITE_API_BASE_URL=http://localhost:5051
+# Default empty: production bundle uses relative /api and /hubs (nginx proxies to rest-api).
+ARG VITE_API_BASE_URL=
 ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
 RUN npm run build
 

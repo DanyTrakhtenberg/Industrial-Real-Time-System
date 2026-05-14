@@ -1,6 +1,11 @@
 import { getApiBaseUrl } from '../config'
 import type { HistoryResponseDto, SensorDto } from '../types/api'
 
+/** Omit credentials on cross-origin API calls (avoids CORS preflight failures in embedded / strict browsers). */
+function apiFetchInit(signal?: AbortSignal): RequestInit {
+  return { signal, credentials: 'omit' }
+}
+
 async function parseJson<T>(response: Response): Promise<T> {
   if (!response.ok) {
     const text = await response.text().catch(() => '')
@@ -11,7 +16,7 @@ async function parseJson<T>(response: Response): Promise<T> {
 
 export async function fetchSensors(signal?: AbortSignal): Promise<SensorDto[]> {
   const url = `${getApiBaseUrl()}/api/sensors`
-  const res = await fetch(url, { signal })
+  const res = await fetch(url, apiFetchInit(signal))
   return parseJson<SensorDto[]>(res)
 }
 
@@ -27,6 +32,6 @@ export async function fetchSensorHistory(
   if (opts?.pageToken) params.set('pageToken', opts.pageToken)
   const qs = params.toString()
   const url = `${getApiBaseUrl()}/api/sensors/${sensorId}/history${qs ? `?${qs}` : ''}`
-  const res = await fetch(url, { signal })
+  const res = await fetch(url, apiFetchInit(signal))
   return parseJson<HistoryResponseDto>(res)
 }

@@ -69,6 +69,9 @@ public sealed class SensorTelemetryGrpcService(ApplicationDbContext db) : Sensor
         if (!exists)
             throw new RpcException(new Status(StatusCode.NotFound, $"Sensor {request.SensorId} was not found."));
 
+        if (request.CapturedAt is null)
+            throw new RpcException(new Status(StatusCode.InvalidArgument, "captured_at is required."));
+
         var capturedAt = ToUtc(request.CapturedAt);
         var row = new TelemetryRow
         {
@@ -89,10 +92,11 @@ public sealed class SensorTelemetryGrpcService(ApplicationDbContext db) : Sensor
         ServerCallContext context)
     {
         var now = DateTime.UtcNow;
-        var from = request.FromUtc.Seconds == 0 && request.FromUtc.Nanos == 0
+        // Well-known Timestamp fields are null when omitted on the wire (proto3 optional message fields).
+        var from = request.FromUtc is null || (request.FromUtc.Seconds == 0 && request.FromUtc.Nanos == 0)
             ? now.AddDays(-7)
             : ToUtc(request.FromUtc);
-        var to = request.ToUtc.Seconds == 0 && request.ToUtc.Nanos == 0
+        var to = request.ToUtc is null || (request.ToUtc.Seconds == 0 && request.ToUtc.Nanos == 0)
             ? now
             : ToUtc(request.ToUtc);
         var pageSize = request.PageSize is > 0 and <= 500 ? request.PageSize : 50;

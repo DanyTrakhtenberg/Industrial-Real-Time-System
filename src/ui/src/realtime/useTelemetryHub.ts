@@ -23,7 +23,7 @@ export function useTelemetryHub(
   useEffect(() => {
     const hubUrl = getSignalRHubUrl()
     const connection: HubConnection = new HubConnectionBuilder()
-      .withUrl(hubUrl)
+      .withUrl(hubUrl, { withCredentials: false })
       .withAutomaticReconnect([0, 2000, 5000, 10000])
       .configureLogging(import.meta.env.DEV ? 'Information' : 'Warning')
       .build()

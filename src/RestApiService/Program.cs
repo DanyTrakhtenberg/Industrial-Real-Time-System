@@ -37,6 +37,7 @@ if (!isTesting)
 builder.Services.AddCors(options => options.AddDefaultPolicy(policy =>
     policy.AllowAnyHeader()
         .AllowAnyMethod()
+        .AllowCredentials()
         .SetIsOriginAllowed(_ => true)));
 
 var app = builder.Build();
@@ -143,7 +144,8 @@ app.MapGet("/api/system/status", async (IConnectionMultiplexer redis, SensorTele
     });
 });
 
-app.MapHub<TelemetryHub>("/hubs/telemetry");
+// Hub path avoids "telemetry" — common filter lists block that substring and break negotiate fetch.
+app.MapHub<TelemetryHub>("/hubs/sensor-stream");
 
 app.Run();
 

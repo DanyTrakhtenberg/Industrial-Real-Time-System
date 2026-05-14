@@ -1,5 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
     <RootNamespace>Industrial.Shared</RootNamespace>
     <Description>Protobuf/gRPC contracts shared by backend services.</Description>
   </PropertyGroup>

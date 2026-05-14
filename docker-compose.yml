@@ -92,8 +92,8 @@ services:
       context: .
       dockerfile: src/ui/Dockerfile
       args:
-        # Browser on the host reaches the API via published port (must match rest-api ports).
-        VITE_API_BASE_URL: http://localhost:5051
+        # Empty = same-origin `/api` + `/hubs` proxied by nginx to `rest-api` (avoids cross-origin in embedded browsers).
+        VITE_API_BASE_URL: ""
     depends_on:
       rest-api:
         condition: service_started
